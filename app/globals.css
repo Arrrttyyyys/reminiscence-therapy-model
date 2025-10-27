@@ -1,8 +1,14 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fef2f2;
-  --foreground: #171717;
+  --background: #0a0a0a;
+  --foreground: #ffffff;
+  --teal-primary: #14b8a6;
+  --teal-dark: #0d9488;
+  --teal-light: #5eead4;
+  --accent-pink: #ec4899;
+  --accent-purple: #a855f7;
+  --accent-blue: #3b82f6;
 }
 
 @theme inline {
@@ -24,14 +30,96 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #fdf2f8;
+  background: #1a1a1a;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #f9a8d4;
+  background: #14b8a6;
   border-radius: 5px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #f472b6;
+  background: #5eead4;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.slide-up {
+  animation: slideUp 0.6s ease-out;
+}
+
+.slide-down {
+  animation: slideDown 0.6s ease-out;
+}
+
+/* Hover animations */
+.hover-lift {
+  transition: all 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 25px -5px rgba(20, 184, 166, 0.1), 0 10px 10px -5px rgba(20, 184, 166, 0.04);
+}
+
+.hover-highlight {
+  transition: all 0.3s ease;
+}
+
+.hover-highlight:hover {
+  border-color: rgb(20, 184, 166);
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1);
+}
+
+.hover-pop {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-pop:hover {
+  transform: scale(1.02);
+  border-color: rgba(20, 184, 166, 0.5);
+}
+
+/* Smooth card elevation */
+.card-hover {
+  transition: all 0.3s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(20, 184, 166, 0.15);
 }
