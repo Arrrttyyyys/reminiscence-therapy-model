@@ -4,10 +4,10 @@ import { useEffect, useState } from 'react';
 import Layout from '@/components/Layout';
 import { useAuth } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { Sparkles, Camera, Music, BookOpen, TrendingUp, Brain, Users, BarChart3, Settings, Video, Home } from 'lucide-react';
+import { Sparkles, Camera, Music, BookOpen, TrendingUp, Brain, Users, BarChart3, Settings, Video, Home, Lightbulb } from 'lucide-react';
 import { generateSuggestions } from '@/lib/utils';
 import { storage } from '@/lib/storage';
+import { useMLService } from '@/lib/ml/hooks';
 
 export default function Dashboard() {
   const { isAuthenticated } = useAuth();
@@ -16,6 +16,7 @@ export default function Dashboard() {
   const [memoryCount, setMemoryCount] = useState(0);
   const [journalCount, setJournalCount] = useState(0);
   const [quizCount, setQuizCount] = useState(0);
+  const { recommendation } = useMLService();
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -40,7 +41,7 @@ export default function Dashboard() {
 
   return (
     <Layout>
-      <div className="max-w-6xl mx-auto space-y-8 pb-32 fade-in">
+      <div id="main-content" className="max-w-6xl mx-auto space-y-8 pb-32 fade-in bg-black text-white">
         {/* Back to Main Page Button */}
         <div className="flex justify-end slide-up">
           <a
@@ -118,10 +119,14 @@ export default function Dashboard() {
               {quickActions.map((action, idx) => {
                 const Icon = action.icon;
                 return (
-                  <Link
+                  <a
                     key={action.href}
                     href={action.href}
-                    className="bg-gray-900/50 border border-gray-700 rounded-2xl shadow-md hover:border-teal-500/50 hover:shadow-xl transition-all duration-300 p-6 hover:scale-105 slide-up group card-hover"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      router.push(action.href);
+                    }}
+                    className="bg-gray-900/50 border border-gray-700 rounded-2xl shadow-md hover:border-teal-500/50 hover:shadow-xl transition-all duration-300 p-6 hover:scale-105 slide-up group card-hover cursor-pointer"
                     style={{ animationDelay: `${idx * 100}ms` }}
                   >
                     <div className={`w-12 h-12 bg-gradient-to-br ${action.gradient} rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}>
@@ -129,19 +134,44 @@ export default function Dashboard() {
                     </div>
                     <h4 className="font-semibold text-white mb-1">{action.title}</h4>
                     <p className="text-sm text-gray-400">{action.desc}</p>
-                  </Link>
+                  </a>
                 );
               })}
             </div>
           </div>
 
-        {/* Encouragement */}
+          {/* AI Activity Recommendation */}
+          {recommendation && (
+            <div className="bg-gray-900/50 border border-purple-500/30 rounded-3xl p-6 slide-up hover-lift">
+              <div className="flex items-start gap-4 mb-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Lightbulb className="w-6 h-6 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold text-white mb-2">AI Suggestion</h3>
+                  <p className="text-gray-300 mb-3">{recommendation.activity.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</p>
+                  <p className="text-sm text-gray-400 italic">"{recommendation.reason}"</p>
+                  <div className="mt-4">
+                    <div className="w-full bg-gray-800 rounded-full h-2">
+                      <div 
+                        className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all"
+                        style={{ width: `${recommendation.confidence * 100}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-gray-400 mt-1">Confidence: {Math.round(recommendation.confidence * 100)}%</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Encouragement */}
         <div className="bg-gradient-to-r from-teal-600 to-cyan-600 rounded-3xl p-8 text-white shadow-lg hover:shadow-2xl transition-all slide-up hover-lift">
           <h3 className="text-2xl font-bold mb-2">Remember</h3>
           <p className="text-sm opacity-90">
             Every memory is precious, and every moment matters. Take your time, explore at your own pace, and enjoy the journey back to cherished times.
           </p>
-        </div>
+          </div>
       </div>
     </Layout>
   );

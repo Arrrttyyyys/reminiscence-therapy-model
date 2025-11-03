@@ -1,11 +1,15 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Navbar from '@/components/Navbar';
 import { Brain, Heart, Users, Sparkles, Camera, BookOpen, BarChart3 } from 'lucide-react';
+
+const Navbar = dynamic(() => import('@/components/Navbar'), {
+  ssr: false,
+});
 
 export default function HomePage() {
   const { isAuthenticated } = useAuth();
@@ -75,12 +79,14 @@ export default function HomePage() {
                 <>
                   <Link
                     href="/dashboard"
+                    prefetch={false}
                     className="px-8 py-4 bg-gradient-to-r from-teal-500 to-cyan-600 text-white rounded-xl font-semibold text-lg hover:from-teal-600 hover:to-cyan-700 transition-all shadow-lg shadow-teal-500/30 hover:scale-105"
                   >
                     Go to Dashboard
                   </Link>
                   <Link
                     href="/about"
+                    prefetch={false}
                     className="px-8 py-4 bg-gray-800 text-white rounded-xl font-semibold text-lg hover:bg-gray-700 transition-all border border-teal-500/30 hover:scale-105"
                   >
                     Learn More
@@ -90,12 +96,14 @@ export default function HomePage() {
                   <>
                     <Link
                       href="/login"
+                      prefetch={false}
                       className="px-8 py-4 bg-gradient-to-r from-teal-500 to-cyan-600 text-white rounded-xl font-semibold text-lg hover:from-teal-600 hover:to-cyan-700 transition-all shadow-lg shadow-teal-500/30 hover:scale-105"
                     >
                       Get Started
                     </Link>
                     <Link
                       href="/about"
+                      prefetch={false}
                       className="px-8 py-4 bg-gray-800 text-white rounded-xl font-semibold text-lg hover:bg-gray-700 transition-all border border-teal-500/30 hover:scale-105"
                     >
                       Learn More
@@ -152,6 +160,7 @@ export default function HomePage() {
             </p>
             <Link
               href="/solutions"
+              prefetch={false}
               className="inline-block px-8 py-4 bg-gradient-to-r from-teal-500 to-cyan-600 text-white rounded-xl font-semibold hover:from-teal-600 hover:to-cyan-700 transition-all shadow-lg shadow-teal-500/30"
             >
               Explore Our Solutions
@@ -171,13 +180,13 @@ export default function HomePage() {
               <span className="text-xl font-bold text-white">Memory Lane</span>
             </div>
             <div className="flex gap-6">
-              <Link href="/about" className="text-gray-400 hover:text-teal-400 transition-colors">
+              <Link href="/about" prefetch={false} className="text-gray-400 hover:text-teal-400 transition-colors">
                 About Us
               </Link>
-              <Link href="/solutions" className="text-gray-400 hover:text-teal-400 transition-colors">
+              <Link href="/solutions" prefetch={false} className="text-gray-400 hover:text-teal-400 transition-colors">
                 Solutions
               </Link>
-              <Link href="/login" className="text-gray-400 hover:text-teal-400 transition-colors">
+              <Link href="/login" prefetch={false} className="text-gray-400 hover:text-teal-400 transition-colors">
                 Login
               </Link>
             </div>
@@ -187,6 +196,6 @@ export default function HomePage() {
           </p>
         </div>
       </footer>
-    </div>
+      </div>
   );
 }

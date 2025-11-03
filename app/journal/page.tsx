@@ -2,11 +2,13 @@
 
 import { useEffect, useState, useRef } from 'react';
 import Layout from '@/components/Layout';
-import { BookOpen, Heart, TrendingUp, Calendar, Mic, MicOff } from 'lucide-react';
+import { BookOpen, Heart, TrendingUp, Calendar, Mic, MicOff, Sparkles } from 'lucide-react';
+import LoadingSpinner from '@/components/LoadingSpinner';
 import { JournalEntry } from '@/types';
 import { storage } from '@/lib/storage';
 import { analyzeSentiment, extractKeywords, calculateSentimentScore } from '@/lib/utils';
 import { format } from 'date-fns';
+import { useMLService } from '@/lib/ml/hooks';
 
 export default function MoodTrackerPage() {
   const [entries, setEntries] = useState<JournalEntry[]>([]);
@@ -15,6 +17,9 @@ export default function MoodTrackerPage() {
   const [sentimentScore, setSentimentScore] = useState(50);
   const [isRecording, setIsRecording] = useState(false);
   const [recognition, setRecognition] = useState<any>(null);
+  const [mlPrediction, setMLPrediction] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
+  const { mlService, recommendation } = useMLService();
 
   useEffect(() => {
     loadEntries();
@@ -62,9 +67,19 @@ export default function MoodTrackerPage() {
   };
 
   const handleSave = () => {
-    if (!currentEntry.trim()) return;
+    // Validation
+    if (!currentEntry.trim()) {
+      setError('Please enter some text or use voice recording');
+      return;
+    }
+
+    if (currentEntry.trim().length < 3) {
+      setError('Entry is too short. Please share a bit more.');
+      return;
+    }
 
     setSaving(true);
+    setError(null);
 
     const entry: JournalEntry = {
       id: Date.now().toString(),
@@ -74,24 +89,57 @@ export default function MoodTrackerPage() {
       keywords: extractKeywords(currentEntry),
     };
 
+    // Collect data for ML training (if consented)
+    if (mlService) {
+      try {
+        const wasSpeech = isRecording;
+        const safetyFlags = mlService.collectFromMoodEntry(entry, wasSpeech);
+        
+        // Predict emotion for display
+        try {
+          const prediction = mlService.predictEmotion(currentEntry);
+          setMLPrediction(prediction);
+        } catch (predError) {
+          console.error('ML prediction failed:', predError);
+        }
+
+        // Check for safety flags (crisis language, etc.)
+        if (safetyFlags?.crisisLanguage) {
+          // Show support resources
+          alert('If you\'re in crisis, please reach out:\n\n• National Suicide Prevention Lifeline: 988\n• Crisis Text Line: Text HOME to 741741\n• Contact your healthcare provider immediately');
+        }
+      } catch (mlError) {
+        console.error('ML collection failed:', mlError);
+        // Continue with save even if ML fails
+      }
+    }
+
     storage.saveJournalEntry(entry);
     loadEntries();
     setCurrentEntry('');
     setSaving(false);
+    setIsRecording(false);
   };
 
   const handleVoiceRecording = () => {
     if (!recognition) {
-      alert('Speech recognition is not available in your browser.');
+      setError('Speech recognition is not available in your browser. Please use Chrome, Edge, or Safari.');
       return;
     }
 
-    if (isRecording) {
-      recognition.stop();
+    try {
+      if (isRecording) {
+        recognition.stop();
+        setIsRecording(false);
+      } else {
+        recognition.start();
+        setIsRecording(true);
+        setError(null);
+      }
+    } catch (error) {
+      console.error('Speech recognition error:', error);
+      setError('Failed to start recording. Please try again.');
       setIsRecording(false);
-    } else {
-      recognition.start();
-      setIsRecording(true);
     }
   };
 
@@ -149,9 +197,17 @@ export default function MoodTrackerPage() {
             <BookOpen className="w-6 h-6 text-teal-400" />
             Share Your Thoughts
           </h3>
+          {error && (
+            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-xl">
+              <p className="text-sm text-red-400">{error}</p>
+            </div>
+          )}
           <textarea
             value={currentEntry}
-            onChange={(e) => setCurrentEntry(e.target.value)}
+            onChange={(e) => {
+              setCurrentEntry(e.target.value);
+              setError(null); // Clear error on input
+            }}
             placeholder="How are you feeling today? What do you remember? Share anything that comes to mind..."
             className="w-full h-48 px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none text-white placeholder-gray-500"
           />
@@ -176,13 +232,13 @@ export default function MoodTrackerPage() {
                 </>
               )}
             </button>
-            <button
-              onClick={handleSave}
-              disabled={saving || !currentEntry.trim()}
+          <button
+            onClick={handleSave}
+            disabled={saving || !currentEntry.trim()}
               className="flex-1 bg-gradient-to-r from-teal-500 to-cyan-600 text-white py-4 rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {saving ? 'Saving...' : 'Save Entry'}
-            </button>
+          >
+            {saving ? 'Saving...' : 'Save Entry'}
+          </button>
           </div>
         </div>
 

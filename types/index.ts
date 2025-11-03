@@ -9,6 +9,17 @@ export interface Memory {
   tags: string[];
 }
 
+export interface Album {
+  id: string;
+  title: string;
+  description: string;
+  memories: Memory[];
+  date: string;
+  createdAt: string;
+  tags: string[];
+  coverImage?: string; // Use first photo as cover
+}
+
 export interface MemoryQuiz {
   id: string;
   type: 'nameRecall' | 'memoryRecall' | 'objectRecognition';
@@ -33,6 +44,12 @@ export interface ProgressData {
   engagementTime: number;
   sentimentScore: number;
   recognitions: number;
+}
+
+export interface QuizResult {
+  quizId: string;
+  score: number;
+  date: string;
 }
 
 export interface ActivitySuggestion {

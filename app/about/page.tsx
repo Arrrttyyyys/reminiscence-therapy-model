@@ -1,7 +1,11 @@
 'use client';
 
-import Navbar from '@/components/Navbar';
+import dynamic from 'next/dynamic';
 import { Heart, Target, Users, Award } from 'lucide-react';
+
+const Navbar = dynamic(() => import('@/components/Navbar'), {
+  ssr: false,
+});
 
 export default function AboutPage() {
   return (

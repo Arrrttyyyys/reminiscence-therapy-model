@@ -1,8 +1,12 @@
 'use client';
 
-import Navbar from '@/components/Navbar';
-import { Brain, Camera, BookOpen, Users, BarChart3, Shield } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
+import { Brain, Camera, BookOpen, Users, BarChart3, Shield } from 'lucide-react';
+
+const Navbar = dynamic(() => import('@/components/Navbar'), {
+  ssr: false,
+});
 
 export default function SolutionsPage() {
   const solutions = [
@@ -87,6 +91,7 @@ export default function SolutionsPage() {
             </p>
             <Link
               href="/login"
+              prefetch={false}
               className="inline-block px-8 py-4 bg-gradient-to-r from-teal-500 to-cyan-600 text-white rounded-xl font-semibold hover:from-teal-600 hover:to-cyan-700 transition-all shadow-lg shadow-teal-500/30 hover:scale-105"
             >
               Sign In

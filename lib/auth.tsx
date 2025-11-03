@@ -16,10 +16,18 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Hardcoded admin credentials for testing
-const ADMIN_CREDENTIALS = {
-  email: 'admin@memorylane.com',
-  password: 'admin123',
+// Hardcoded credentials for testing
+const CREDENTIALS = {
+  admin: {
+    email: 'admin@memorylane.com',
+    password: 'admin123',
+    role: 'admin' as const,
+  },
+  patient: {
+    email: 'patient@memorylane.com',
+    password: 'patient123',
+    role: 'patient' as const,
+  },
 };
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -33,20 +41,67 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const initializePatientData = async () => {
+    // Check if this is the first time logging in as patient
+    const patientDataKey = 'patient-data-initialized';
+    const wasInitialized = localStorage.getItem(patientDataKey) === 'true';
+    
+    // If patient data was already initialized, don't reinitialize
+    if (wasInitialized) {
+      return;
+    }
+
+    // Import and initialize sample data
+    try {
+      const { getPatientSampleData } = await import('@/lib/sampleData');
+      const sampleData = getPatientSampleData();
+      
+      // Save all data
+      localStorage.setItem('memory-lane-memories', JSON.stringify(sampleData.memories));
+      localStorage.setItem('memory-lane-journal', JSON.stringify(sampleData.journalEntries));
+      localStorage.setItem('memory-lane-progress', JSON.stringify(sampleData.progressData));
+      localStorage.setItem('memory-lane-quiz-results', JSON.stringify(sampleData.quizResults));
+      
+      // Mark as initialized
+      localStorage.setItem(patientDataKey, 'true');
+      
+      // Reload page to show new data
+      setTimeout(() => {
+        window.location.reload();
+      }, 100);
+    } catch (error) {
+      console.error('Failed to initialize patient data:', error);
+    }
+  };
+
   const login = (email: string, password: string): boolean => {
-    // Hardcoded admin login
-    if (email === ADMIN_CREDENTIALS.email && password === ADMIN_CREDENTIALS.password) {
+    // Check admin credentials
+    if (email === CREDENTIALS.admin.email && password === CREDENTIALS.admin.password) {
       const userData: User = { email, role: 'admin' };
       setUser(userData);
       localStorage.setItem('memory-lane-user', JSON.stringify(userData));
       return true;
     }
+    
+    // Check patient credentials
+    if (email === CREDENTIALS.patient.email && password === CREDENTIALS.patient.password) {
+      const userData: User = { email, role: 'patient' };
+      setUser(userData);
+      localStorage.setItem('memory-lane-user', JSON.stringify(userData));
+      
+      // Initialize sample data for patient account (async)
+      initializePatientData().catch(console.error);
+      
+      return true;
+    }
+    
     return false;
   };
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem('memory-lane-user');
+    // Note: We keep the data so it persists across logins
   };
 
   return (

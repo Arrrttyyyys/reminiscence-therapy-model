@@ -1,10 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
-import Navbar from '@/components/Navbar';
 import { LogIn, Mail, Lock } from 'lucide-react';
+
+const Navbar = dynamic(() => import('@/components/Navbar'), {
+  ssr: false,
+});
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -84,12 +88,29 @@ export default function LoginPage() {
               </button>
             </form>
 
-            <div className="mt-6 p-4 bg-teal-500/10 border border-teal-500/30 rounded-xl">
-              <p className="text-sm text-teal-400 text-center">
-                <strong>Demo Credentials:</strong><br />
-                Email: admin@memorylane.com<br />
-                Password: admin123
-              </p>
+            <div className="mt-6 space-y-3">
+              <div className="p-4 bg-teal-500/10 border border-teal-500/30 rounded-xl">
+                <p className="text-sm text-teal-400 text-center mb-2">
+                  <strong className="text-teal-300">Admin Account (Empty Data)</strong>
+                </p>
+                <p className="text-xs text-teal-400/80 text-center">
+                  Email: admin@memorylane.com<br />
+                  Password: admin123
+                </p>
+              </div>
+              
+              <div className="p-4 bg-purple-500/10 border border-purple-500/30 rounded-xl">
+                <p className="text-sm text-purple-400 text-center mb-2">
+                  <strong className="text-purple-300">Patient Account (Sample Data)</strong>
+                </p>
+                <p className="text-xs text-purple-400/80 text-center">
+                  Email: patient@memorylane.com<br />
+                  Password: patient123
+                </p>
+                <p className="text-xs text-purple-300/70 text-center mt-2 italic">
+                  Includes: 7 memories, 15 journal entries, progress data, and quiz results
+                </p>
+              </div>
             </div>
           </div>
         </div>

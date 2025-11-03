@@ -1,14 +1,29 @@
 'use client';
 
-import Navigation from './Navigation';
-import { Heart } from 'lucide-react';
-import { useAuth } from '@/lib/auth';
+import { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
+import { Heart, UserCog, User, Settings } from 'lucide-react';
+import { useView } from '@/lib/viewContext';
+import { useRouter } from 'next/navigation';
+
+const Navigation = dynamic(() => import('./Navigation'), {
+  ssr: false,
+  loading: () => null,
+});
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
 export default function Layout({ children }: LayoutProps) {
+  const [mounted, setMounted] = useState(false);
+  const { viewMode, toggleView } = useView();
+  const router = useRouter();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   return (
     <div className="min-h-screen bg-black">
       {/* Header */}
@@ -23,16 +38,50 @@ export default function Layout({ children }: LayoutProps) {
               <p className="text-xs text-teal-400">Your companion for cherished memories</p>
             </div>
           </div>
+          
+          {/* Right Side Actions */}
+          {mounted && (
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => router.push('/settings')}
+                className="flex items-center gap-2 px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-xl hover:bg-gray-700 transition-all duration-200 group"
+                title="Settings"
+              >
+                <Settings className="w-4 h-4 text-gray-400 group-hover:text-white" />
+              </button>
+              <button
+                onClick={toggleView}
+                className="flex items-center gap-2 px-4 py-2 bg-teal-500/20 border border-teal-500/30 rounded-xl hover:bg-teal-500/30 transition-all duration-200 group"
+                title={`Switch to ${viewMode === 'patient' ? 'Caregiver' : 'Patient'} view`}
+              >
+                {viewMode === 'patient' ? (
+                  <>
+                    <UserCog className="w-4 h-4 text-teal-400 group-hover:text-teal-300" />
+                    <span className="text-sm font-medium text-teal-400 group-hover:text-teal-300">
+                      Caregiver View
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <User className="w-4 h-4 text-teal-400 group-hover:text-teal-300" />
+                    <span className="text-sm font-medium text-teal-400 group-hover:text-teal-300">
+                      Patient View
+                    </span>
+                  </>
+                )}
+              </button>
+            </div>
+          )}
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-6">
+      <main className="container mx-auto px-4 py-6 bg-black">
         {children}
       </main>
 
-      {/* Navigation */}
-      <Navigation />
+      {/* Navigation - Only render after mount */}
+      {mounted && <Navigation />}
     </div>
   );
 }

@@ -1,7 +1,8 @@
-import { Memory, JournalEntry, ProgressData, MemoryQuiz } from '@/types';
+import { Memory, JournalEntry, ProgressData, MemoryQuiz, Album } from '@/types';
 
 const STORAGE_KEYS = {
   memories: 'memory-lane-memories',
+  albums: 'memory-lane-albums',
   journal: 'memory-lane-journal',
   progress: 'memory-lane-progress',
   quizResults: 'memory-lane-quiz-results',
@@ -21,10 +22,53 @@ export const storage = {
     return data ? JSON.parse(data) : [];
   },
 
+  updateMemory(id: string, updatedMemory: Partial<Memory>): void {
+    const memories = this.getMemories();
+    const index = memories.findIndex(m => m.id === id);
+    if (index !== -1) {
+      memories[index] = { ...memories[index], ...updatedMemory };
+      localStorage.setItem(STORAGE_KEYS.memories, JSON.stringify(memories));
+    }
+  },
+
   deleteMemory(id: string): void {
     const memories = this.getMemories();
     const filtered = memories.filter(m => m.id !== id);
     localStorage.setItem(STORAGE_KEYS.memories, JSON.stringify(filtered));
+    
+    // Also remove from albums if it exists there
+    const albums = this.getAlbums();
+    albums.forEach(album => {
+      album.memories = album.memories.filter(m => m.id !== id);
+    });
+    localStorage.setItem(STORAGE_KEYS.albums, JSON.stringify(albums));
+  },
+
+  // Albums
+  saveAlbum(album: Album): void {
+    const albums = this.getAlbums();
+    albums.push(album);
+    localStorage.setItem(STORAGE_KEYS.albums, JSON.stringify(albums));
+  },
+
+  getAlbums(): Album[] {
+    const data = localStorage.getItem(STORAGE_KEYS.albums);
+    return data ? JSON.parse(data) : [];
+  },
+
+  updateAlbum(id: string, updatedAlbum: Partial<Album>): void {
+    const albums = this.getAlbums();
+    const index = albums.findIndex(a => a.id === id);
+    if (index !== -1) {
+      albums[index] = { ...albums[index], ...updatedAlbum };
+      localStorage.setItem(STORAGE_KEYS.albums, JSON.stringify(albums));
+    }
+  },
+
+  deleteAlbum(id: string): void {
+    const albums = this.getAlbums();
+    const filtered = albums.filter(a => a.id !== id);
+    localStorage.setItem(STORAGE_KEYS.albums, JSON.stringify(filtered));
   },
 
   // Journal
