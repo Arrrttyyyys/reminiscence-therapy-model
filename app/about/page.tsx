@@ -16,7 +16,7 @@ export default function AboutPage() {
         <div className="space-y-12 fade-in">
           <div className="text-center">
             <h1 className="text-5xl font-bold text-white mb-4 bg-gradient-to-r from-teal-400 via-cyan-400 to-teal-300 bg-clip-text text-transparent">
-              About Memory Lane
+              About ReminoraCare
             </h1>
             <p className="text-xl text-gray-300">
               Empowering memory care through technology and compassion
@@ -31,7 +31,7 @@ export default function AboutPage() {
               <div>
                 <h2 className="text-2xl font-bold text-white mb-3">Our Mission</h2>
                 <p className="text-gray-300 text-lg leading-relaxed">
-                  At Memory Lane, we believe that every memory is precious and that technology should serve 
+                  At ReminoraCare, we believe that every memory is precious and that technology should serve 
                   humanity with empathy and understanding. Our platform provides a safe, supportive environment 
                   for individuals experiencing memory challenges, their families, and caregivers.
                 </p>
@@ -47,7 +47,7 @@ export default function AboutPage() {
               <div>
                 <h2 className="text-2xl font-bold text-white mb-3">What We Do</h2>
                 <p className="text-gray-300 mb-4 text-lg">
-                  Memory Lane combines evidence-based reminiscence therapy with intuitive design to create 
+                  ReminoraCare combines evidence-based reminiscence therapy with intuitive design to create 
                   meaningful experiences:
                 </p>
                 <ul className="space-y-3 text-gray-300">

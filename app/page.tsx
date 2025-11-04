@@ -1,15 +1,11 @@
 'use client';
 
-import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Brain, Heart, Users, Sparkles, Camera, BookOpen, BarChart3 } from 'lucide-react';
-
-const Navbar = dynamic(() => import('@/components/Navbar'), {
-  ssr: false,
-});
+import Navbar from '@/components/Navbar';
 
 export default function HomePage() {
   const { isAuthenticated } = useAuth();
@@ -65,7 +61,7 @@ export default function HomePage() {
         <div className="container mx-auto max-w-6xl">
           <div className="text-center fade-in">
             <h1 className="text-6xl font-bold text-white mb-6 bg-gradient-to-r from-teal-400 via-cyan-400 to-teal-300 bg-clip-text text-transparent">
-              Memory Lane
+              ReminoraCare
             </h1>
             <p className="text-2xl text-gray-300 mb-4">
               Your Compassionate Digital Companion for Memory Care
@@ -94,13 +90,14 @@ export default function HomePage() {
                 </>
               ) : (
                   <>
-                    <Link
-                      href="/login"
-                      prefetch={false}
+                    <button
+                      onClick={() => {
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
                       className="px-8 py-4 bg-gradient-to-r from-teal-500 to-cyan-600 text-white rounded-xl font-semibold text-lg hover:from-teal-600 hover:to-cyan-700 transition-all shadow-lg shadow-teal-500/30 hover:scale-105"
                     >
                       Get Started
-                    </Link>
+                    </button>
                     <Link
                       href="/about"
                       prefetch={false}
@@ -192,7 +189,7 @@ export default function HomePage() {
             </div>
           </div>
           <p className="text-center text-gray-500 mt-8">
-            © 2024 Memory Lane. All rights reserved.
+            © 2024 ReminoraCare. All rights reserved.
           </p>
         </div>
       </footer>

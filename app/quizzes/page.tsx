@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import Layout from '@/components/Layout';
-import { Brain, CheckCircle, XCircle, Smile, ArrowLeft, Play } from 'lucide-react';
+import { Brain, CheckCircle, XCircle, Smile, ArrowLeft, Play, Image as ImageIcon } from 'lucide-react';
 import { storage } from '@/lib/storage';
 import { useMLService } from '@/lib/ml/hooks';
+import { Memory } from '@/types';
 
 interface Quiz {
   id: string;
@@ -12,6 +13,9 @@ interface Quiz {
   question: string;
   options: string[];
   correctAnswer: string;
+  memoryImage?: string; // URL to the memory photo
+  memoryId?: string; // ID of the memory being tested
+  memoryTitle?: string; // Title of the memory
 }
 
 const quizTypes = [
@@ -52,76 +56,8 @@ const quizTypes = [
   },
 ];
 
-const quizQuestions: Record<string, Quiz[]> = {
-  nameRecall: [
-    {
-      id: '1',
-      type: 'nameRecall',
-      question: 'Who is this person? (Think of a family member)',
-      options: ['Your granddaughter Emma', 'Your daughter Sarah', 'Your sister Mary', 'Your friend Anne'],
-      correctAnswer: 'Your granddaughter Emma',
-    },
-    {
-      id: '2',
-      type: 'nameRecall',
-      question: 'What is the name of your neighbor?',
-      options: ['John', 'Michael', 'Robert', 'David'],
-      correctAnswer: 'John',
-    },
-    {
-      id: '3',
-      type: 'nameRecall',
-      question: 'Who is your best friend from childhood?',
-      options: ['Tom', 'Sarah', 'James', 'Lisa'],
-      correctAnswer: 'Sarah',
-    },
-  ],
-  objectRecognition: [
-    {
-      id: '1',
-      type: 'objectRecognition',
-      question: 'What is this everyday object used for?',
-      options: ['Drinking tea', 'Holding flowers', 'Storing food', 'Writing letters'],
-      correctAnswer: 'Drinking tea',
-    },
-    {
-      id: '2',
-      type: 'objectRecognition',
-      question: 'What does a key open?',
-      options: ['A door', 'A window', 'A book', 'A drawer'],
-      correctAnswer: 'A door',
-    },
-    {
-      id: '3',
-      type: 'objectRecognition',
-      question: 'What is the purpose of a calendar?',
-      options: ['To tell time', 'To track dates', 'To make calls', 'To write notes'],
-      correctAnswer: 'To track dates',
-    },
-  ],
-  memoryRecall: [
-    {
-      id: '1',
-      type: 'memoryRecall',
-      question: 'Where did you go on your favorite vacation?',
-      options: ['The beach', 'The mountains', 'The city', 'Home'],
-      correctAnswer: 'The beach',
-    },
-    {
-      id: '2',
-      type: 'memoryRecall',
-      question: 'What did you have for breakfast this morning?',
-      options: ['Toast and eggs', 'Cereal', 'Fruit', 'Pancakes'],
-      correctAnswer: 'Toast and eggs',
-    },
-    {
-      id: '3',
-      type: 'memoryRecall',
-      question: 'What was the weather like yesterday?',
-      options: ['Sunny', 'Rainy', 'Cloudy', 'Snowy'],
-      correctAnswer: 'Sunny',
-    },
-  ],
+// Static quiz questions for sequence and spatial recall (they don't use photos)
+const staticQuizQuestions: Record<string, Quiz[]> = {
   sequenceRecall: [
     {
       id: '1',
@@ -170,6 +106,40 @@ const quizQuestions: Record<string, Quiz[]> = {
   ],
 };
 
+// Fallback quizzes if no memories available (defined outside component)
+const getFallbackQuizzes = (quizType: string): Quiz[] => {
+  const fallback: Record<string, Quiz[]> = {
+    nameRecall: [
+      {
+        id: '1',
+        type: 'nameRecall',
+        question: 'Who is this person? (Think of a family member)',
+        options: ['Your granddaughter Emma', 'Your daughter Sarah', 'Your sister Mary', 'Your friend Anne'],
+        correctAnswer: 'Your granddaughter Emma',
+      },
+    ],
+    objectRecognition: [
+      {
+        id: '1',
+        type: 'objectRecognition',
+        question: 'What is this everyday object used for?',
+        options: ['Drinking tea', 'Holding flowers', 'Storing food', 'Writing letters'],
+        correctAnswer: 'Drinking tea',
+      },
+    ],
+    memoryRecall: [
+      {
+        id: '1',
+        type: 'memoryRecall',
+        question: 'Where did you go on your favorite vacation?',
+        options: ['The beach', 'The mountains', 'The city', 'Home'],
+        correctAnswer: 'The beach',
+      },
+    ],
+  };
+  return fallback[quizType] || [];
+};
+
 export default function QuizzesPage() {
   const [selectedQuizType, setSelectedQuizType] = useState<string | null>(null);
   const [currentQuiz, setCurrentQuiz] = useState<Quiz | null>(null);
@@ -180,11 +150,141 @@ export default function QuizzesPage() {
   const [totalQuizzes, setTotalQuizzes] = useState(0);
   const [quizStarted, setQuizStarted] = useState(false);
   const [answerStartTime, setAnswerStartTime] = useState<number>(0);
+  const [memories, setMemories] = useState<Memory[]>([]);
+  const [albums, setAlbums] = useState<any[]>([]);
   const { mlService } = useMLService();
+
+  // Generate quizzes from user's memories
+  const generateQuizzesFromMemories = (quizType: string, photos: Memory[]): Quiz[] => {
+    if (photos.length === 0) {
+      // Fallback to generic questions if no photos
+      return getFallbackQuizzes(quizType);
+    }
+
+    const quizzes: Quiz[] = [];
+    
+    // Shuffle and take up to 10 photos for variety
+    const shuffled = [...photos].sort(() => Math.random() - 0.5).slice(0, 10);
+
+    switch (quizType) {
+      case 'nameRecall':
+        shuffled.forEach((memory, idx) => {
+          // Extract potential names from tags or title
+          const tags = memory.tags || [];
+          const title = memory.title || '';
+          
+          // Generate options based on tags and common names
+          const options = [
+            title || `This memory from ${memory.date}`,
+            tags[0] ? `${tags[0]} memory` : 'A family memory',
+            tags[1] ? `${tags[1]} moment` : 'A special moment',
+            'A cherished memory',
+          ];
+          
+          quizzes.push({
+            id: `name-${memory.id}-${idx}`,
+            type: 'nameRecall',
+            question: `What is this memory about? Look at the photo and tell us what you remember.`,
+            options: options.slice(0, 4),
+            correctAnswer: title || options[0],
+            memoryImage: memory.content,
+            memoryId: memory.id,
+            memoryTitle: memory.title,
+          });
+        });
+        break;
+
+      case 'objectRecognition':
+        shuffled.forEach((memory, idx) => {
+          const tags = memory.tags || [];
+          
+          // Generate questions about objects that might be in the photo
+          const tagBasedOptions = tags.length > 0
+            ? [
+                memory.description || `This shows ${tags[0]}`,
+                tags[1] ? `Something related to ${tags[1]}` : 'A special moment',
+                tags[2] ? `Something related to ${tags[2]}` : 'A beautiful scene',
+                'A wonderful memory',
+              ]
+            : [
+                memory.description || 'A special moment',
+                'A beautiful scene',
+                'A wonderful memory',
+                'A cherished moment',
+              ];
+          
+          quizzes.push({
+            id: `object-${memory.id}-${idx}`,
+            type: 'objectRecognition',
+            question: `What do you see in this photo? What objects or people are shown?`,
+            options: tagBasedOptions.slice(0, 4),
+            correctAnswer: memory.description || (tags[0] ? `This shows ${tags[0]}` : 'A special moment'),
+            memoryImage: memory.content,
+            memoryId: memory.id,
+            memoryTitle: memory.title,
+          });
+        });
+        break;
+
+      case 'memoryRecall':
+        shuffled.forEach((memory, idx) => {
+          // Use the actual memory details
+          const tags = memory.tags || [];
+          const date = new Date(memory.date);
+          const dateStr = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+          
+          quizzes.push({
+            id: `memory-${memory.id}-${idx}`,
+            type: 'memoryRecall',
+            question: `When was this memory created? What do you remember about this moment?`,
+            options: [
+              memory.title || `A memory from ${dateStr}`,
+              memory.description || `This was a ${tags[0] || 'special'} time`,
+              `Something from ${tags[1] || 'the past'}`,
+              `A ${tags[2] || 'beautiful'} moment`,
+            ],
+            correctAnswer: memory.title || `A memory from ${dateStr}`,
+            memoryImage: memory.content,
+            memoryId: memory.id,
+            memoryTitle: memory.title,
+          });
+        });
+        break;
+    }
+
+    return quizzes.length > 0 ? quizzes : getFallbackQuizzes(quizType);
+  };
+
+  useEffect(() => {
+    // Load memories and albums for personalized quizzes
+    const userMemories = storage.getMemories();
+    const userAlbums = storage.getAlbums();
+    
+    // Get all photos from albums too
+    const albumPhotos: Memory[] = [];
+    userAlbums.forEach(album => {
+      albumPhotos.push(...album.memories);
+    });
+    
+    // Combine all photo memories
+    const allPhotos = [...userMemories, ...albumPhotos].filter(m => m.type === 'photo');
+    
+    setMemories(allPhotos);
+    setAlbums(userAlbums);
+  }, []);
 
   const startQuiz = (quizType: string) => {
     setSelectedQuizType(quizType);
-    const quizzes = quizQuestions[quizType] || [];
+    
+    // Generate quizzes from user's memories
+    const photoMemories = memories.filter(m => m.type === 'photo');
+    const generatedQuizzes = generateQuizzesFromMemories(quizType, photoMemories);
+    
+    // For sequence and spatial recall, use static questions (they don't use photos)
+    const quizzes = ['sequenceRecall', 'spatialRecall'].includes(quizType) 
+      ? (staticQuizQuestions[quizType] || getFallbackQuizzes(quizType))
+      : generatedQuizzes;
+    
     if (quizzes.length > 0) {
       setCurrentQuiz(quizzes[0]);
       setCurrentQuizIndex(0);
@@ -227,11 +327,16 @@ export default function QuizzesPage() {
 
   const handleNext = () => {
     if (!selectedQuizType) return;
-    const quizzes = quizQuestions[selectedQuizType] || [];
     
-    if (currentQuizIndex < quizzes.length - 1) {
+    // Regenerate quizzes to get fresh ones (or use static for sequence/spatial)
+    const photoMemories = memories.filter(m => m.type === 'photo');
+    const generatedQuizzes = ['sequenceRecall', 'spatialRecall'].includes(selectedQuizType)
+      ? (staticQuizQuestions[selectedQuizType] || getFallbackQuizzes(selectedQuizType))
+      : generateQuizzesFromMemories(selectedQuizType, photoMemories);
+    
+    if (currentQuizIndex < generatedQuizzes.length - 1) {
       setCurrentQuizIndex(currentQuizIndex + 1);
-      setCurrentQuiz(quizzes[currentQuizIndex + 1]);
+      setCurrentQuiz(generatedQuizzes[currentQuizIndex + 1]);
       setSelectedAnswer('');
       setShowResult(false);
       setAnswerStartTime(Date.now()); // Start timing for next question
@@ -341,7 +446,13 @@ export default function QuizzesPage() {
   // Show current quiz question
   if (!selectedQuizType || !currentQuiz) return null;
 
-  const quizzes = quizQuestions[selectedQuizType] || [];
+  // Get current quizzes (generated or static)
+  const photoMemories = memories.filter(m => m.type === 'photo');
+  const generatedQuizzes = ['sequenceRecall', 'spatialRecall'].includes(selectedQuizType)
+    ? (staticQuizQuestions[selectedQuizType] || getFallbackQuizzes(selectedQuizType))
+    : generateQuizzesFromMemories(selectedQuizType, photoMemories);
+  
+  const quizzes = generatedQuizzes;
   const selectedType = quizTypes.find(t => t.id === selectedQuizType);
 
   return (
@@ -393,7 +504,28 @@ export default function QuizzesPage() {
             </div>
           </div>
 
+          {/* Show memory image if available */}
+          {currentQuiz.memoryImage && (
+            <div className="mb-6 rounded-xl overflow-hidden border-2 border-teal-500/30">
+              <img
+                src={currentQuiz.memoryImage}
+                alt={currentQuiz.memoryTitle || 'Memory photo'}
+                className="w-full h-64 object-cover"
+                onError={(e) => {
+                  // Fallback if image fails to load
+                  (e.target as HTMLImageElement).style.display = 'none';
+                }}
+              />
+            </div>
+          )}
+
           <h2 className="text-2xl font-bold text-white mb-6">{currentQuiz.question}</h2>
+          
+          {currentQuiz.memoryTitle && (
+            <p className="text-sm text-gray-400 mb-4 italic">
+              This photo is from: {currentQuiz.memoryTitle}
+            </p>
+          )}
 
           <div className="space-y-3 mb-6">
             {currentQuiz.options.map((option, idx) => {

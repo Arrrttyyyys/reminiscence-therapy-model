@@ -91,14 +91,14 @@ export default function CaregiverInsightsPage() {
   }, [medicines]);
 
   const loadInsights = () => {
-    const stored = localStorage.getItem('memory-lane-insights');
+    const stored = localStorage.getItem('reminoracare-insights');
     if (stored) {
       setInsights(JSON.parse(stored));
     }
   };
 
   const loadMedicines = () => {
-    const stored = localStorage.getItem('memory-lane-medicines');
+    const stored = localStorage.getItem('reminoracare-medicines');
     if (stored) {
       const parsed = JSON.parse(stored);
       setMedicines(parsed);
@@ -109,7 +109,7 @@ export default function CaregiverInsightsPage() {
 
   const checkDailyMedicineStatus = () => {
     const today = new Date().toISOString().split('T')[0];
-    const stored = localStorage.getItem('memory-lane-medicines');
+    const stored = localStorage.getItem('reminoracare-medicines');
     if (!stored) return;
     
     const medicines: Medicine[] = JSON.parse(stored);
@@ -118,7 +118,7 @@ export default function CaregiverInsightsPage() {
       return { ...med, takenToday: lastTaken === today };
     });
     setMedicines(updated);
-    localStorage.setItem('memory-lane-medicines', JSON.stringify(updated));
+    localStorage.setItem('reminoracare-medicines', JSON.stringify(updated));
   };
 
   const handleSave = () => {
@@ -136,7 +136,7 @@ export default function CaregiverInsightsPage() {
     };
 
     const updated = [insight, ...insights];
-    localStorage.setItem('memory-lane-insights', JSON.stringify(updated));
+    localStorage.setItem('reminoracare-insights', JSON.stringify(updated));
     loadInsights();
 
     setNewInsight('');
@@ -148,7 +148,7 @@ export default function CaregiverInsightsPage() {
 
   const removeInsight = (id: string) => {
     const updated = insights.filter(i => i.id !== id);
-    localStorage.setItem('memory-lane-insights', JSON.stringify(updated));
+    localStorage.setItem('reminoracare-insights', JSON.stringify(updated));
     loadInsights();
   };
 
@@ -183,7 +183,7 @@ export default function CaregiverInsightsPage() {
     }
 
     setMedicines(updated);
-    localStorage.setItem('memory-lane-medicines', JSON.stringify(updated));
+    localStorage.setItem('reminoracare-medicines', JSON.stringify(updated));
     setShowMedicineModal(false);
     setEditingMedicine(null);
     setNewMedicine({
@@ -206,7 +206,7 @@ export default function CaregiverInsightsPage() {
     if (medicineToDelete) {
       const updated = medicines.filter(m => m.id !== medicineToDelete);
       setMedicines(updated);
-      localStorage.setItem('memory-lane-medicines', JSON.stringify(updated));
+      localStorage.setItem('reminoracare-medicines', JSON.stringify(updated));
       setMedicineToDelete(null);
     }
     setShowDeleteConfirm(false);
@@ -238,7 +238,7 @@ export default function CaregiverInsightsPage() {
       return med;
     });
     setMedicines(updated);
-    localStorage.setItem('memory-lane-medicines', JSON.stringify(updated));
+    localStorage.setItem('reminoracare-medicines', JSON.stringify(updated));
   };
 
   const handleTimeOfDayToggle = (time: string) => {

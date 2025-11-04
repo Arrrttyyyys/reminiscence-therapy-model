@@ -40,7 +40,7 @@ export default function LoginPage() {
                 <LogIn className="w-8 h-8 text-white" />
               </div>
               <h2 className="text-3xl font-bold text-white mb-2">Welcome Back</h2>
-              <p className="text-gray-400">Sign in to access Memory Lane</p>
+              <p className="text-gray-400">Sign in to access ReminoraCare</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -94,7 +94,7 @@ export default function LoginPage() {
                   <strong className="text-teal-300">Admin Account (Empty Data)</strong>
                 </p>
                 <p className="text-xs text-teal-400/80 text-center">
-                  Email: admin@memorylane.com<br />
+                  Email: admin@reminoracare.com<br />
                   Password: admin123
                 </p>
               </div>
@@ -104,7 +104,7 @@ export default function LoginPage() {
                   <strong className="text-purple-300">Patient Account (Sample Data)</strong>
                 </p>
                 <p className="text-xs text-purple-400/80 text-center">
-                  Email: patient@memorylane.com<br />
+                  Email: patient@reminoracare.com<br />
                   Password: patient123
                 </p>
                 <p className="text-xs text-purple-300/70 text-center mt-2 italic">

@@ -60,7 +60,7 @@ export default function Dashboard() {
                 <Sparkles className="w-8 h-8 text-white" />
               </div>
               <div className="flex-1">
-                <h2 className="text-3xl font-bold text-white mb-2">Welcome to Memory Lane</h2>
+                <h2 className="text-3xl font-bold text-white mb-2">Welcome to ReminoraCare</h2>
                 <p className="text-gray-300 mb-4 text-lg">
                   Your companion for cherished memories and gentle mental exercises.
                 </p>

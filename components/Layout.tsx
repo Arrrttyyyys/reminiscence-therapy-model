@@ -34,7 +34,7 @@ export default function Layout({ children }: LayoutProps) {
               <Heart className="w-6 h-6 text-white" fill="white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-white">Memory Lane</h1>
+              <h1 className="text-2xl font-bold text-white">ReminoraCare</h1>
               <p className="text-xs text-teal-400">Your companion for cherished memories</p>
             </div>
           </div>

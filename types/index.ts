@@ -30,12 +30,27 @@ export interface MemoryQuiz {
   relatedMemory?: Memory;
 }
 
+export interface EmotionData {
+  emotion: 'happy' | 'sad' | 'angry' | 'surprised' | 'fearful' | 'disgusted' | 'neutral';
+  confidence: number;
+  timestamp: number; // Time in video (seconds)
+}
+
+export interface VideoEntry {
+  videoUrl: string; // Blob URL or data URL
+  duration: number; // Duration in seconds
+  emotions: EmotionData[]; // Emotions detected throughout the video
+  averageEmotion: string; // Most common emotion
+}
+
 export interface JournalEntry {
   id: string;
   content: string;
   date: string;
   sentiment: 'positive' | 'neutral' | 'negative';
   keywords: string[];
+  videoEntry?: VideoEntry; // Optional video recording with emotion data
+  entryType?: 'text' | 'voice' | 'video'; // Type of entry (optional for backward compatibility)
 }
 
 export interface ProgressData {

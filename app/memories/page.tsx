@@ -74,7 +74,13 @@ export default function MemoriesPage() {
 
   const loadAlbums = () => {
     const savedAlbums = storage.getAlbums();
+    console.log('Loading albums from storage:', {
+      count: savedAlbums.length,
+      firstAlbum: savedAlbums[0] || null,
+      rawStorage: localStorage.getItem('reminoracare-albums'),
+    });
     setAlbums(savedAlbums.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+    console.log('Albums set in state:', savedAlbums.length);
   };
 
   const handleDeleteMemory = (id: string) => {

@@ -3,9 +3,9 @@
 import { ModelWeights, ConsentSettings } from './types';
 
 const STORAGE_KEYS = {
-  modelWeights: 'memory-lane-ml-weights',
-  consent: 'memory-lane-ml-consent',
-  trainingHistory: 'memory-lane-ml-training-history',
+  modelWeights: 'reminoracare-ml-weights',
+  consent: 'reminoracare-ml-consent',
+  trainingHistory: 'reminoracare-ml-training-history',
 };
 
 export const mlStorage = {

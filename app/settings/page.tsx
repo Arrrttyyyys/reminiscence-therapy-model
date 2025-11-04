@@ -54,7 +54,7 @@ export default function SettingsPage() {
         {/* Header */}
         <div className="mb-6 slide-up">
           <h2 className="text-3xl font-bold text-white mb-2">Settings</h2>
-          <p className="text-gray-400">Customize your Memory Lane experience</p>
+          <p className="text-gray-400">Customize your ReminoraCare experience</p>
         </div>
 
         {/* ML & AI Settings */}

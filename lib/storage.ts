@@ -1,12 +1,12 @@
 import { Memory, JournalEntry, ProgressData, MemoryQuiz, Album } from '@/types';
 
 const STORAGE_KEYS = {
-  memories: 'memory-lane-memories',
-  albums: 'memory-lane-albums',
-  journal: 'memory-lane-journal',
-  progress: 'memory-lane-progress',
-  quizResults: 'memory-lane-quiz-results',
-  settings: 'memory-lane-settings',
+  memories: 'reminoracare-memories',
+  albums: 'reminoracare-albums',
+  journal: 'reminoracare-journal',
+  progress: 'reminoracare-progress',
+  quizResults: 'reminoracare-quiz-results',
+  settings: 'reminoracare-settings',
 };
 
 export const storage = {
@@ -81,6 +81,12 @@ export const storage = {
   getJournalEntries(): JournalEntry[] {
     const data = localStorage.getItem(STORAGE_KEYS.journal);
     return data ? JSON.parse(data) : [];
+  },
+
+  deleteJournalEntry(id: string): void {
+    const entries = this.getJournalEntries();
+    const filtered = entries.filter(e => e.id !== id);
+    localStorage.setItem(STORAGE_KEYS.journal, JSON.stringify(filtered));
   },
 
   // Progress
