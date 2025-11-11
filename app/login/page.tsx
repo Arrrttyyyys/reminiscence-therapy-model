@@ -4,7 +4,7 @@ import { useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
-import { LogIn, Mail, Lock } from 'lucide-react';
+import { LogIn, Mail, Lock, UserPlus, User } from 'lucide-react';
 
 const Navbar = dynamic(() => import('@/components/Navbar'), {
   ssr: false,
@@ -13,18 +13,37 @@ const Navbar = dynamic(() => import('@/components/Navbar'), {
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [userRole, setUserRole] = useState<'patient' | 'caregiver' | 'family'>('patient');
   const [error, setError] = useState('');
-  const { login } = useAuth();
+  const [isRegistering, setIsRegistering] = useState(false);
+  const { login, register } = useAuth();
   const router = useRouter();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     
-    if (login(email, password)) {
-      router.push('/');
+    if (isRegistering) {
+      // Registration flow
+      if (password !== confirmPassword) {
+        setError('Passwords do not match');
+        return;
+      }
+
+      const result = register(email, password, userRole);
+      if (result.success) {
+        router.push('/');
+      } else {
+        setError(result.error || 'Registration failed. Please try again.');
+      }
     } else {
-      setError('Invalid credentials. Please try again.');
+      // Login flow
+      if (login(email, password)) {
+        router.push('/');
+      } else {
+        setError('Invalid credentials. Please try again.');
+      }
     }
   };
 
@@ -37,10 +56,51 @@ export default function LoginPage() {
           <div className="bg-gray-900/50 border border-teal-500/30 rounded-3xl p-8 shadow-2xl">
             <div className="text-center mb-8">
               <div className="w-16 h-16 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <LogIn className="w-8 h-8 text-white" />
+                {isRegistering ? (
+                  <UserPlus className="w-8 h-8 text-white" />
+                ) : (
+                  <LogIn className="w-8 h-8 text-white" />
+                )}
               </div>
-              <h2 className="text-3xl font-bold text-white mb-2">Welcome Back</h2>
-              <p className="text-gray-400">Sign in to access ReminoraCare</p>
+              <h2 className="text-3xl font-bold text-white mb-2">
+                {isRegistering ? 'Create Account' : 'Welcome Back'}
+              </h2>
+              <p className="text-gray-400">
+                {isRegistering ? 'Sign up to get started with ReminoraCare' : 'Sign in to access ReminoraCare'}
+              </p>
+            </div>
+
+            {/* Toggle between login and register */}
+            <div className="mb-6 flex gap-2 p-1 bg-gray-800/50 rounded-xl">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsRegistering(false);
+                  setError('');
+                  setConfirmPassword('');
+                }}
+                className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all ${
+                  !isRegistering
+                    ? 'bg-teal-500 text-white'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                Sign In
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsRegistering(true);
+                  setError('');
+                }}
+                className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all ${
+                  isRegistering
+                    ? 'bg-teal-500 text-white'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                Register
+              </button>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -74,44 +134,123 @@ export default function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-full pl-12 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20"
-                    placeholder="••••••••"
+                    placeholder={isRegistering ? "At least 6 characters" : "••••••••"}
                     required
+                    minLength={isRegistering ? 6 : undefined}
                   />
                 </div>
               </div>
+
+              {isRegistering && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Confirm Password</label>
+                    <div className="relative">
+                      <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <input
+                        type="password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        className="w-full pl-12 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20"
+                        placeholder="Confirm your password"
+                        required
+                        minLength={6}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Account Type</label>
+                    <div className="grid grid-cols-3 gap-2 mb-2">
+                      <button
+                        type="button"
+                        onClick={() => setUserRole('patient')}
+                        className={`px-4 py-3 rounded-xl font-medium transition-all ${
+                          userRole === 'patient'
+                            ? 'bg-teal-500 text-white'
+                            : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                        }`}
+                      >
+                        Patient
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setUserRole('caregiver')}
+                        className={`px-4 py-3 rounded-xl font-medium transition-all ${
+                          userRole === 'caregiver'
+                            ? 'bg-teal-500 text-white'
+                            : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                        }`}
+                      >
+                        Caregiver
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setUserRole('family')}
+                        className={`px-4 py-3 rounded-xl font-medium transition-all ${
+                          userRole === 'family'
+                            ? 'bg-teal-500 text-white'
+                            : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                        }`}
+                      >
+                        Family
+                      </button>
+                    </div>
+                    <p className="text-xs text-gray-400">
+                      {userRole === 'patient' && 'Access all features: memories, games, mood tracking, and progress'}
+                      {userRole === 'caregiver' && 'Manage medications, add insights, and track patient progress'}
+                      {userRole === 'family' && 'View progress, add insights, and support your loved one'}
+                    </p>
+                  </div>
+                </>
+              )}
 
               <button
                 type="submit"
                 className="w-full bg-gradient-to-r from-teal-500 to-cyan-600 text-white py-4 rounded-xl font-semibold hover:from-teal-600 hover:to-cyan-700 transition-all shadow-lg shadow-teal-500/30 hover:scale-105"
               >
-                Sign In
+                {isRegistering ? 'Create Account' : 'Sign In'}
               </button>
             </form>
 
-            <div className="mt-6 space-y-3">
-              <div className="p-4 bg-teal-500/10 border border-teal-500/30 rounded-xl">
-                <p className="text-sm text-teal-400 text-center mb-2">
-                  <strong className="text-teal-300">Admin Account (Empty Data)</strong>
-                </p>
-                <p className="text-xs text-teal-400/80 text-center">
-                  Email: admin@reminoracare.com<br />
-                  Password: admin123
-                </p>
+            {!isRegistering && (
+              <div className="mt-6 text-center">
+                <button
+                  type="button"
+                  onClick={() => setIsRegistering(true)}
+                  className="text-teal-400 hover:text-teal-300 text-sm font-medium"
+                >
+                  Don't have an account? Register here
+                </button>
               </div>
-              
-              <div className="p-4 bg-purple-500/10 border border-purple-500/30 rounded-xl">
-                <p className="text-sm text-purple-400 text-center mb-2">
-                  <strong className="text-purple-300">Patient Account (Sample Data)</strong>
-                </p>
-                <p className="text-xs text-purple-400/80 text-center">
-                  Email: patient@reminoracare.com<br />
-                  Password: patient123
-                </p>
-                <p className="text-xs text-purple-300/70 text-center mt-2 italic">
-                  Includes: 7 memories, 15 journal entries, progress data, and quiz results
-                </p>
+            )}
+
+            {!isRegistering && (
+              <div className="mt-6 space-y-3">
+                <div className="p-4 bg-teal-500/10 border border-teal-500/30 rounded-xl">
+                  <p className="text-sm text-teal-400 text-center mb-2">
+                    <strong className="text-teal-300">Demo Admin Account</strong>
+                  </p>
+                  <p className="text-xs text-teal-400/80 text-center">
+                    Email: admin@reminoracare.com<br />
+                    Password: admin123
+                  </p>
+                </div>
+                
+                <div className="p-4 bg-purple-500/10 border border-purple-500/30 rounded-xl">
+                  <p className="text-sm text-purple-400 text-center mb-2">
+                    <strong className="text-purple-300">Demo Patient Account (Sample Data)</strong>
+                  </p>
+                  <p className="text-xs text-purple-400/80 text-center">
+                    Email: patient@reminoracare.com<br />
+                    Password: patient123
+                  </p>
+                  <p className="text-xs text-purple-300/70 text-center mt-2 italic">
+                    Includes: 7 memories, 15 journal entries, progress data, and quiz results
+                  </p>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>

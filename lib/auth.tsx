@@ -10,13 +10,49 @@ interface User {
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => boolean;
+  register: (email: string, password: string, role: 'patient' | 'caregiver' | 'family') => { success: boolean; error?: string };
   logout: () => void;
   isAuthenticated: boolean;
 }
 
+interface StoredUser {
+  email: string;
+  passwordHash: string; // Hashed password
+  role: 'patient' | 'caregiver' | 'family' | 'admin';
+  createdAt: string;
+}
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Hardcoded credentials for testing
+// Storage key for user accounts
+const USERS_STORAGE_KEY = 'reminoracare-users';
+
+// Simple hash function for passwords (client-side only - not production-grade)
+function hashPassword(password: string): string {
+  let hash = 0;
+  for (let i = 0; i < password.length; i++) {
+    const char = password.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  // Add salt and convert to hex
+  return (hash + 2147483647).toString(16);
+}
+
+// Get all stored users
+function getStoredUsers(): Record<string, StoredUser> {
+  if (typeof window === 'undefined') return {};
+  const stored = localStorage.getItem(USERS_STORAGE_KEY);
+  return stored ? JSON.parse(stored) : {};
+}
+
+// Save users to storage
+function saveUsers(users: Record<string, StoredUser>): void {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
+}
+
+// Hardcoded credentials for testing (admin and demo patient)
 const CREDENTIALS = {
   admin: {
     email: 'admin@reminoracare.com',
@@ -129,8 +165,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const register = (email: string, password: string, role: 'patient' | 'caregiver' | 'family'): { success: boolean; error?: string } => {
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return { success: false, error: 'Please enter a valid email address' };
+    }
+
+    // Validate password length
+    if (password.length < 6) {
+      return { success: false, error: 'Password must be at least 6 characters long' };
+    }
+
+    // Check if user already exists
+    const users = getStoredUsers();
+    if (users[email.toLowerCase()]) {
+      return { success: false, error: 'An account with this email already exists' };
+    }
+
+    // Create new user
+    const passwordHash = hashPassword(password);
+    const newUser: StoredUser = {
+      email: email.toLowerCase(),
+      passwordHash,
+      role,
+      createdAt: new Date().toISOString(),
+    };
+
+    // Save user
+    users[email.toLowerCase()] = newUser;
+    saveUsers(users);
+
+    // Auto-login after registration
+    const userData: User = { email: email.toLowerCase(), role };
+    setUser(userData);
+    localStorage.setItem('reminoracare-user', JSON.stringify(userData));
+
+    // New users start with empty data (no sample data initialization)
+    // Only the demo patient account gets sample data
+
+    return { success: true };
+  };
+
   const login = (email: string, password: string): boolean => {
-    // Check admin credentials
+    // Check hardcoded admin credentials
     if (email === CREDENTIALS.admin.email && password === CREDENTIALS.admin.password) {
       const userData: User = { email, role: 'admin' };
       setUser(userData);
@@ -138,7 +216,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return true;
     }
     
-    // Check patient credentials
+    // Check hardcoded patient credentials
     if (email === CREDENTIALS.patient.email && password === CREDENTIALS.patient.password) {
       const userData: User = { email, role: 'patient' };
       setUser(userData);
@@ -148,6 +226,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       initializePatientData().catch(console.error);
       
       return true;
+    }
+
+    // Check registered users
+    const users = getStoredUsers();
+    const user = users[email.toLowerCase()];
+    
+    if (user) {
+      const passwordHash = hashPassword(password);
+      if (user.passwordHash === passwordHash) {
+        const userData: User = { email: user.email, role: user.role };
+        setUser(userData);
+        localStorage.setItem('reminoracare-user', JSON.stringify(userData));
+        return true;
+      }
     }
     
     return false;
@@ -160,7 +252,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, login, register, logout, isAuthenticated: !!user }}>
       {children}
     </AuthContext.Provider>
   );
